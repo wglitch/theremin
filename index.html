@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Camera Theremin - Dual Hand</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>📸 Camera Theremin 🙌</h1>
+    <p class="instructions">Use TWO HANDS! Move closer/further for pitch. Left/right for volume.</p>
+    
+    <button id="startButton">Start Theremin</button>
+    
+    <div id="canvasContainer" style="display:none;">
+      <video id="input_video" style="display: none;"></video>
+      <canvas id="output_canvas" width="1280px" height="720px"></canvas>
+      
+      <div class="info-grid">
+        <div class="hand-info hand1">
+          <h3>🟣 Hand 1 (Low)</h3>
+          <div id="pitch1">Hand 1: --</div>
+          <div id="volume1">Vol: --%</div>
+        </div>
+        <div class="hand-info hand2">
+          <h3>🔵 Hand 2 (High)</h3>
+          <div id="pitch2">Hand 2: --</div>
+          <div id="volume2">Vol: --%</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="controls" id="controls" style="display:none;">
+  <h3 style="text-align:center; color:#00ffff; margin-bottom:15px;">🎛️ EFFECT CONTROLS</h3>
+  
+  <!-- HAND 1 CONTROLS -->
+  <div style="border: 2px solid #00FF00; padding: 10px; margin-bottom: 15px; border-radius: 8px;">
+    <h4 style="color:#00FF00; margin-top:0;">Hand 1 (Green)</h4>
+    
+    <div class="control-row">
+      <div class="control-group">
+        <label>
+          Wave Type:
+          <select id="waveType1">
+            <option value="sine">Sine</option>
+            <option value="triangle">Triangle</option>
+            <option value="sawtooth">Sawtooth</option>
+            <option value="square">Square</option>
+          </select>
+        </label>
+      </div>
+      
+      <div class="control-group">
+        <label>
+          Reverb:
+          <input type="range" id="reverb1" min="0" max="100" value="30">
+          <span id="reverb1Value">30%</span>
+        </label>
+      </div>
+    </div>
+    
+    <div class="control-row">
+      <div class="control-group">
+        <label>
+          Delay:
+          <input type="range" id="delay1" min="0" max="100" value="0">
+          <span id="delay1Value">0%</span>
+        </label>
+      </div>
+      
+      <div class="control-group">
+        <label>
+          Distortion:
+          <input type="range" id="distortion1" min="0" max="100" value="0">
+          <span id="distortion1Value">0%</span>
+        </label>
+      </div>
+    </div>
+  </div>
+  
+  <!-- HAND 2 CONTROLS -->
+  <div style="border: 2px solid #FF8800; padding: 10px; margin-bottom: 15px; border-radius: 8px;">
+    <h4 style="color:#FF8800; margin-top:0;">Hand 2 (Orange)</h4>
+    
+    <div class="control-row">
+      <div class="control-group">
+        <label>
+          Wave Type:
+          <select id="waveType2">
+            <option value="sine">Sine</option>
+            <option value="triangle" selected>Triangle</option>
+            <option value="sawtooth">Sawtooth</option>
+            <option value="square">Square</option>
+          </select>
+        </label>
+      </div>
+      
+      <div class="control-group">
+        <label>
+          Reverb:
+          <input type="range" id="reverb2" min="0" max="100" value="50">
+          <span id="reverb2Value">50%</span>
+        </label>
+      </div>
+    </div>
+    
+    <div class="control-row">
+      <div class="control-group">
+        <label>
+          Delay:
+          <input type="range" id="delay2" min="0" max="100" value="40">
+          <span id="delay2Value">40%</span>
+        </label>
+      </div>
+      
+      <div class="control-group">
+        <label>
+          Distortion:
+          <input type="range" id="distortion2" min="0" max="100" value="0">
+          <span id="distortion2Value">0%</span>
+        </label>
+      </div>
+    </div>
+  </div>
+  
+  <!-- MASTER CONTROLS -->
+  <div class="control-row">
+    <div class="control-group">
+      <label>
+        Master Volume:
+        <input type="range" id="masterVolume" min="0" max="100" value="70">
+        <span id="masterValue">70%</span>
+      </label>
+    </div>
+  </div>
+</div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+  <script src="theremin.js"></script>
+</body>
+</html>
