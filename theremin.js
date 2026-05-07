@@ -399,55 +399,69 @@ function initCamera() {
 
 
 function onResults(results) {
+  // Spara canvas-inställningar
   canvasCtx.save();
+  
+  // Rensa canvasen inför nästa bildruta
   canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-  canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
 
-  // Grid
-  canvasCtx.strokeStyle = 'rgba(0, 255, 255, 0.2)';
-  canvasCtx.lineWidth = 1;
-  for (let i = 1; i < 10; i++) {
-    const x = (i / 10) * canvasElement.width;
-    canvasCtx.beginPath();
-    canvasCtx.moveTo(x, 0);
-    canvasCtx.lineTo(x, canvasElement.height);
-    canvasCtx.stroke();
+  // ---- LÄGG TILL DENNA VIKTIGA RAD ----
+  // Rita den aktuella kamerabilden på canvasen
+  canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
+  // ------------------------------------
+
+  // Om händer upptäcks, rita dem ovanpå bilden
+  if (results.multiHandLandmarks && results.multiHandedness) {
+    for (let index = 0; index < results.multiHandLandmarks.length; index++) {
+      const classification = results.multiHandedness[index];
+      const isRightHand = classification.label === 'Right';
+      const landmarks = results.multiHandLandmarks[index];
+      
+      // Rita anslutningar (skelettet)
+      drawConnectors(
+        canvasCtx, landmarks, HAND_CONNECTIONS,
+        {color: isRightHand ? '#00FF00' : '#FF0000'});
+        
+      // Rita landmärken (prickarna)
+      drawLandmarks(canvasCtx, landmarks, {
+        color: isRightHand ? '#00FF00' : '#FF0000',
+        fillColor: isRightHand ? '#FF0000' : '#00FF00',
+        radius: (data) => {
+          return lerp(data.from.z, -0.15, .1, 10, 1);
+        }
+      });
+    }
   }
 
-  const detectedHands = [false, false];
+  // Återställ canvas-inställningar
+  canvasCtx.restore();
 
-  if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-    results.multiHandLandmarks.forEach((landmarks, index) => {
-      if (index < 2) { // Begränsa till max två händer
-        detectedHands[index] = true;
-        const handColor = index === 0 ? '#00FF00' : '#FF0000'; // Grön för första, röd för andra
-
-        // Rita landmärken och kopplingar
-        drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, { color: handColor, lineWidth: 5 });
-        drawLandmarks(canvasCtx, landmarks, { color: handColor, lineWidth: 2 });
-
-        // Hämta fingertoppens position (landmark 8)
-        const fingerTip = landmarks[8];
-        const x = fingerTip.x;
-        const y = 1 - fingerTip.y; // Invertera y-axeln
-
-        // Uppdatera ljud och UI
-        if (oscillators[index]) {
-          const freq = 100 + x * 800; // Frekvens (Hz) baserat på x-position
-          const vol = y * 0.5;         // Volym baserat på y-position
-          oscillators[index].frequency.setTargetAtTime(freq, audioCtx.currentTime, 0.01);
-          gains[index].gain.setTargetAtTime(vol, audioCtx.currentTime, 0.01);
-
-          // Uppdatera UI-text
-          const freqLabel = document.getElementById(`freq${index + 1}`);
-          const volLabel = document.getElementById(`vol${index + 1}`);
-          if (freqLabel) freqLabel.textContent = `${Math.round(freq)} Hz`;
-          if (volLabel) volLabel.textContent = `${Math.round(vol * 100)}%`;
-        }
-      }
+  // ----- Här börjar din befintliga ljudlogik -----
+  // (Denna del ska du redan ha)
+  const detectedHands = [false, false]; // [Hand 1, Hand 2]
+  if (results.multiHandLandmarks && results.multiHandedness) {
+    results.multiHandLandmarks.forEach((landmarks, i) => {
+      const handIndex = results.multiHandedness[i].label === 'Left' ? 0 : 1;
+      detectedHands[handIndex] = true;
+      
+      const wrist = landmarks[0];
+      const thumbTip = landmarks[4];
+      
+      let pitch = 1 - Math.min(1, Math.max(0, wrist.y));
+      let volume = 1 - Math.min(1, Math.max(0, wrist.x));
+      let depth = Math.abs(thumbTip.z - wrist.z);
+      
+      updateTheremin(handIndex, pitch, volume, depth);
     });
   }
 
+  detectedHands.forEach((isDetected, index) => {
+    if (!isDetected && gains[index]) {
+      gains[index].gain.setTargetAtTime(0, audioCtx.currentTime, 0.05);
+      updateInfoDisplay(index, 0, 0, 0, false);
+    }
+  });
+}
   // Stäng av ljudet för händer som inte detekteras
   detectedHands.forEach((isDetected, index) => {
     if (!isDetected && gains[index]) {
