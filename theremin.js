@@ -27,15 +27,27 @@ function startTheremin() {
   initAudio();
   console.log('Theremin startad!');
  
-  // ---- LÄGG TILL DENNA KOD ----
+  // Hämta canvas-containern
+  const canvasContainer = document.getElementById('canvasContainer');
+  const controls = document.getElementById('controls');
+ 
+  // ---- DETTA ÄR DE VIKTIGA RADERNA ----
+  // Dölj startknappen
+  startButton.style.display = 'none';
+  // Visa canvas och kontroller
+  canvasContainer.style.display = 'block';
+  controls.style.display = 'block';
+  // ------------------------------------
+ 
   const camera = new Camera(videoElement, {
     onFrame: async () => {
-      await hands.send({image: videoElement});
+      await hands.send({ image: videoElement });
     },
     width: 1280,
     height: 720
   });
   camera.start();
+}
   // -----------------------------
 
   // Göm knappen så man inte kan klicka igen
