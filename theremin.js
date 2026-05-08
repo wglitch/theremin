@@ -94,13 +94,13 @@ function onResults(results) {
                 
                 const fingerTip = landmarks[8]; // Pekfingertoppen
                 
-                // === NY LOGIK FÖR BORDSLÄGE ===
+                // === KORRIGERAD LOGIK FÖR BORDSLÄGE ===
 
                 // 1. Tonhöjd styrs av HÖJDEN (z-axeln).
-                // z-värdet är negativt och blir "mer negativt" ju längre bort handen är.
-                // Vi omvandlar det till ett positivt värde mellan ca 0.0 och 1.0.
-                const height = Math.min(1, Math.max(0, (fingerTip.z * -1 - 0.1) * 2)); 
-                const freq = 100 + height * 900; // Tonhöjd baserat på höjd
+                // Vi inverterar värdet så att NÄRA = LÅG TON och LÅNGT BORT = HÖG TON.
+                const rawHeight = Math.min(1, Math.max(0, (fingerTip.z * -1 - 0.1) * 2));
+                const pitchControl = 1 - rawHeight; // Här sker inverteringen!
+                const freq = 100 + pitchControl * 900; 
 
                 // 2. Volym styrs av SIDLED (x-axeln).
                 const vol = fingerTip.x;
