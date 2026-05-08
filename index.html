@@ -29,9 +29,10 @@
     </div>
 
     <div class="controls" id="controls" style="display:none;">
-        <p>Hand 1 (Grön): <span id="freq1">0 Hz</span> | <span id="vol1">0%</span></p>
-        <p>Hand 2 (Röd): <span id="freq2">0 Hz</span> | <span id="vol2">0%</span></p>
-    </div>
+    <p>Pitch (Höger hand): <span id="pitchDisplay">0 Hz</span></p>
+    <p>Volume (Vänster hand): <span id="volumeDisplay">0%</span></p>
+    <p>Master Volume: <input type="range" id="masterVolume" min="0" max="1" value="0.5" step="0.01"></p>
+</div>
 
     <div class="debug-info" id="debugInfo" style="display:none;">
         <p>DEBUG Z-axel: <span id="debugZ">...</span></p>

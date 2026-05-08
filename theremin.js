@@ -30,14 +30,14 @@ hands.onResults(onResults);
 
 function initAudio() {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    for (let i = 0; i < 2; i++) {
-        oscillators[i] = audioCtx.createOscillator();
-        gains[i] = audioCtx.createGain();
-        gains[i].gain.setValueAtTime(0, audioCtx.currentTime);
-        oscillators[i].connect(gains[i]);
-        gains[i].connect(audioCtx.destination);
-        oscillators[i].start();
-    }
+    // Vi behöver bara EN oscillator och EN gain-nod nu
+    oscillators[0] = audioCtx.createOscillator();
+    gains[0] = audioCtx.createGain();
+    gains[0].gain.setValueAtTime(0, audioCtx.currentTime);
+    oscillators[0].connect(gains[0]);
+    gains[0].connect(audioCtx.destination);
+    oscillators[0].start();
+}
 } // Slut på initAudio
 
 function startTheremin() {
@@ -60,57 +60,63 @@ function startTheremin() {
 } // Slut på startTheremin
 
 function onResults(results) {
-    const NEAR_Z = -0.5;
-    const FAR_Z = 0.1;
+    // Hämta UI-element
+    const pitchDisplay = document.getElementById('pitchDisplay');
+    const volumeDisplay = document.getElementById('volumeDisplay');
 
+    // Nollställ canvas
     canvasCtx.save();
     canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
     canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
 
-    const detectedHands = [false, false];
+    // Standardvärden (tystnad)
+    let finalFreq = 82; // Lägsta tonen
+    let finalVol = 0;   // Ingen volym
+
+    // Inställningar för tonhöjd och spann
+    const NEAR_Z = -0.5;
+    const FAR_Z = 0.1;
+    const baseFreq = 82; 
+    const range = 441;
 
     if (results.multiHandLandmarks && results.multiHandedness) {
         results.multiHandLandmarks.forEach((landmarks, i) => {
-            const handIndex = results.multiHandedness[i].label === 'Left' ? 0 : 1;
-            if (handIndex < 2) {
-                detectedHands[handIndex] = true;
-                const handColor = handIndex === 0 ? '#00FF00' : '#FF0000';
+            const handedness = results.multiHandedness[i].label; // 'Left' eller 'Right'
+            const fingerTip = landmarks[8]; // Pekfingertoppen
 
+            if (handedness === 'Right') { // HÖGER HAND STYR TONHÖJD
+                const handColor = '#FF0000'; // Röd
                 drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, { color: handColor, lineWidth: 5 });
                 drawLandmarks(canvasCtx, landmarks, { color: handColor, lineWidth: 2 });
-                
-                const fingerTip = landmarks[8];
-                const zValue = fingerTip.z;
-                
-                let pitchControl = (zValue - NEAR_Z) / (FAR_Z - NEAR_Z);
+
+                let pitchControl = (fingerTip.z - NEAR_Z) / (FAR_Z - NEAR_Z);
                 pitchControl = Math.max(0, Math.min(1, pitchControl));
-                
-                const baseFreq = 82; // Lägsta ton (E2, som en gitarr)
-		const range = 441;   // Spannet upp till C5 (523 Hz - 82 Hz = 441)
-		const freq = baseFreq + pitchControl * range;
-                const distanceFromCenter = Math.sqrt(Math.pow(fingerTip.x - 0.5, 2) + Math.pow(fingerTip.y - 0.5, 2));
-                const vol = Math.max(0, 1 - (distanceFromCenter / 0.707));
+                finalFreq = baseFreq + pitchControl * range;
+            }
 
-                oscillators[handIndex].frequency.setTargetAtTime(freq, audioCtx.currentTime, 0.01);
-                gains[handIndex].gain.setTargetAtTime(vol, audioCtx.currentTime, 0.01);
+            if (handedness === 'Left') { // VÄNSTER HAND STYR VOLYM
+                const handColor = '#00FF00'; // Grön
+                drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, { color: handColor, lineWidth: 5 });
+                drawLandmarks(canvasCtx, landmarks, { color: handColor, lineWidth: 2 });
 
-                document.getElementById(`freq${handIndex + 1}`).textContent = `${Math.round(freq)} Hz`;
-                document.getElementById(`vol${handIndex + 1}`).textContent = `${Math.round(vol * 100)}%`;
+                // X-axeln (0.1 till 0.9) styr volymen
+                const volControl = (fingerTip.x - 0.1) / (0.9 - 0.1);
+                const handVol = Math.max(0, Math.min(1, volControl));
+                const masterVol = parseFloat(masterVolumeSlider.value);
+                finalVol = handVol * masterVol;
+            }
+        });
+    }
 
-                debugZ.textContent = zValue.toFixed(3);
-                debugPitch.textContent = pitchControl.toFixed(3);
-            } // Slut på if (handIndex < 2)
-        }); // Slut på forEach
-    } // Slut på if (results.multiHandLandmarks)
-
-    detectedHands.forEach((isDetected, index) => {
-        if (!isDetected && gains[index]) {
-            gains[index].gain.setTargetAtTime(0, audioCtx.currentTime, 0.05);
-        }
-    });
+    // Applicera de slutgiltiga värdena på den ENDA oscillatorn
+    if (audioCtx) {
+        oscillators[0].frequency.setTargetAtTime(finalFreq, audioCtx.currentTime, 0.08);
+        gains[0].gain.setTargetAtTime(finalVol, audioCtx.currentTime, 0.08);
+    }
+    
+    // Uppdatera UI
+    pitchDisplay.textContent = `${Math.round(finalFreq)} Hz`;
+    volumeDisplay.textContent = `${Math.round(finalVol * 100)}%`;
 
     canvasCtx.restore();
-} // Slut på onResults
-
-// --- Starta applikationen ---
-startButton.addEventListener('click', startTheremin);
+}
