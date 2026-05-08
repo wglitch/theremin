@@ -1,0 +1,17 @@
+{
+  "name": "Visual Theremin",
+  "short_name": "Theremin",
+  "description": "A camera-controlled stereo theremin for hand gestures.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#11110f",
+  "theme_color": "#11110f",
+  "icons": [
+    {
+      "src": "thereminicon2.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
