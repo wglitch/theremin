@@ -1,166 +1,78 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="sv">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Camera Theremin - Dual Hand</title>
-  <link rel="stylesheet" href="style.css">
- <style>
-        /* Denna stil ser till att canvasen fyller skärmens bredd 
-           men ALLTID behåller 16:9-proportioner utan att tryckas ihop. */
+    <meta charset="UTF-8">
+    <title>Hand Theremin</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+
+    <style>
+        body {
+            font-family: sans-serif;
+            background-color: #222;
+            color: #eee;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        button {
+            font-size: 1.5rem;
+            padding: 15px 30px;
+            cursor: pointer;
+        }
+        #canvasContainer {
+            position: relative;
+            width: 100%;
+            max-width: 960px; /* Sätter en maxbredd på dator */
+            margin: 20px auto; /* Centrerar */
+        }
         #output_canvas {
             width: 100%;
             height: auto;
-            aspect-ratio: 16 / 9;
-            transform: scaleX(-1); /* Behåller spegelvändningen */
-            display: block; /* Förhindrar konstiga marginaler */
+            aspect-ratio: 16 / 9; /* Tvingar 16:9, fixar ihoptryckt bild */
+            transform: scaleX(-1);
+            display: block;
+        }
+        .controls, .debug-info {
+            text-align: center;
+            font-size: 1.2rem;
+        }
+        .debug-info {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #111;
+            border: 1px solid #444;
+            font-family: monospace;
         }
     </style>
 </head>
 <body>
-  <div class="container">
-    <h1>📸 Camera Theremin 🙌</h1>
-    <p class="instructions">Use TWO HANDS! Move closer/further for pitch. Left/right for volume.</p>
-    
-    <button id="startButton">Start Theremin</button>
-    
+
+    <h1>Hand Theremin</h1>
+    <button id="startButton">Starta Theremin</button>
+
     <div id="canvasContainer" style="display:none;">
-      <video id="input_video" style="display: none;"></video>
-      <canvas id="output_canvas" width="1280" height="720"></canvas>
+        <video id="input_video" style="display: none;"></video>
+        <canvas id="output_canvas" width="1280" height="720"></canvas>
+    </div>
 
-	<div class="ui-container" id="uiContainer" style="display:none;">
-        	<p>Hand 1 (Grön): <span id="freq1">0 Hz</span> | <span id="vol1">0%</span></p>
-        	<p>Hand 2 (Röd): <span id="freq2">0 Hz</span> | <span id="vol2">0%</span></p>
-   	</div>
+    <!-- UI för Hertz och Volym -->
+    <div class="controls" id="controls" style="display:none;">
+        <p>Hand 1 (Grön): <span id="freq1">0 Hz</span> | <span id="vol1">0%</span></p>
+        <p>Hand 2 (Röd): <span id="freq2">0 Hz</span> | <span id="vol2">0%</span></p>
+    </div>
 
- <!-- NYTT: KLISTRA IN DETTA BLOCK -->
-    <div id="debugInfo" style="display:none; padding: 10px; background-color: #333; color: white; font-family: monospace;">
+    <!-- DEBUG-RUTAN SOM SAKNADES -->
+    <div class="debug-info" id="debugInfo" style="display:none;">
         <p>DEBUG Z-axel: <span id="debugZ">...</span></p>
         <p>DEBUG Pitch-kontroll (0-1): <span id="debugPitch">...</span></p>
     </div>
-      
-      <div class="info-grid">
-        <div class="hand-info hand1">
-          <h3>🟣 Hand 1 (Low)</h3>
-          <div id="freq1">Hand 1: -- Hz</div>
-	  <div id="vol1">Vol: --%</div>
-        </div>
-        <div class="hand-info hand2">
-          <h3>🔵 Hand 2 (High)</h3>
-          <div id="freq2">Hand 2: -- Hz</div>
-	  <div id="vol2">Vol: --%</div>
-        </div>
-      </div>
-    </div>
-    
-    <div class="controls" id="controls" style="display:none;">
-  <h3 style="text-align:center; color:#00ffff; margin-bottom:15px;">🎛️ EFFECT CONTROLS</h3>
-  
-  <!-- HAND 1 CONTROLS -->
-  <div style="border: 2px solid #00FF00; padding: 10px; margin-bottom: 15px; border-radius: 8px;">
-    <h4 style="color:#00FF00; margin-top:0;">Hand 1 (Green)</h4>
-    
-    <div class="control-row">
-      <div class="control-group">
-        <label>
-          Wave Type:
-          <select id="waveType1">
-            <option value="sine">Sine</option>
-            <option value="triangle">Triangle</option>
-            <option value="sawtooth">Sawtooth</option>
-            <option value="square">Square</option>
-          </select>
-        </label>
-      </div>
-      
-      <div class="control-group">
-        <label>
-          Reverb:
-          <input type="range" id="reverb1" min="0" max="100" value="30">
-          <span id="reverb1Value">30%</span>
-        </label>
-      </div>
-    </div>
-    
-    <div class="control-row">
-      <div class="control-group">
-        <label>
-          Delay:
-          <input type="range" id="delay1" min="0" max="100" value="0">
-          <span id="delay1Value">0%</span>
-        </label>
-      </div>
-      
-      <div class="control-group">
-        <label>
-          Distortion:
-          <input type="range" id="distortion1" min="0" max="100" value="0">
-          <span id="distortion1Value">0%</span>
-        </label>
-      </div>
-    </div>
-  </div>
-  
-  <!-- HAND 2 CONTROLS -->
-  <div style="border: 2px solid #FF8800; padding: 10px; margin-bottom: 15px; border-radius: 8px;">
-    <h4 style="color:#FF8800; margin-top:0;">Hand 2 (Orange)</h4>
-    
-    <div class="control-row">
-      <div class="control-group">
-        <label>
-          Wave Type:
-          <select id="waveType2">
-            <option value="sine">Sine</option>
-            <option value="triangle" selected>Triangle</option>
-            <option value="sawtooth">Sawtooth</option>
-            <option value="square">Square</option>
-          </select>
-        </label>
-      </div>
-      
-      <div class="control-group">
-        <label>
-          Reverb:
-          <input type="range" id="reverb2" min="0" max="100" value="50">
-          <span id="reverb2Value">50%</span>
-        </label>
-      </div>
-    </div>
-    
-    <div class="control-row">
-      <div class="control-group">
-        <label>
-          Delay:
-          <input type="range" id="delay2" min="0" max="100" value="40">
-          <span id="delay2Value">40%</span>
-        </label>
-      </div>
-      
-      <div class="control-group">
-        <label>
-          Distortion:
-          <input type="range" id="distortion2" min="0" max="100" value="0">
-          <span id="distortion2Value">0%</span>
-        </label>
-      </div>
-    </div>
-  </div>
-  
-  <!-- MASTER CONTROLS -->
-  <div class="control-row">
-    <div class="control-group">
-      <label>
-        Master Volume:
-        <input type="range" id="masterVolume" min="0" max="100" value="70">
-        <span id="masterValue">70%</span>
-      </label>
-    </div>
-  </div>
-</div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
-  <script src="theremin.js"></script>
+    <script type="module" src="theremin.js"></script>
+
 </body>
 </html>
