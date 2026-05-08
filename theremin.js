@@ -81,7 +81,7 @@ function onResults(results) {
     // NEAR_Z: Hur nära handen måste vara för lägsta tonen. Närmare 0 är närmare skärmen.
     const NEAR_Z = -0.05; 
     // FAR_Z: Hur långt bort handen måste vara för högsta tonen. Mer negativt är längre bort.
-    const FAR_Z = -0.6;
+    const FAR_Z = -0.9;
     // ------------------------------------
 
     canvasCtx.save();
