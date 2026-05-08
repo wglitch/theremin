@@ -10,6 +10,7 @@ const startButton = document.getElementById('startButton');
 const canvasContainer = document.getElementById('canvasContainer');
 const controls = document.getElementById('controls');
 
+
 // 2. Ljud-setup (Globala variabler)
 let audioCtx;
 const oscillators = [null, null];
@@ -77,9 +78,7 @@ hands.onResults(onResults);
 // 5. Huvudfunktionen som körs för varje bildruta från kameran
 function onResults(results) {
     // --- Konstanter för finjustering ---
-    // Låg ton när handen är på detta avstånd (närmare 0 = närmare skärmen)
     const NEAR_Z = -0.05; 
-    // Hög ton när handen är på detta avstånd (mer negativt = längre bort)
     const FAR_Z = -0.9;
     // ------------------------------------
 
@@ -99,16 +98,17 @@ function onResults(results) {
                 drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, { color: handColor, lineWidth: 5 });
                 drawLandmarks(canvasCtx, landmarks, { color: handColor, lineWidth: 2 });
                 
-                const fingerTip = landmarks[8]; // Pekfingertoppen
+                const fingerTip = landmarks[8];
                 
-                // === KORREKT LOGIK FÖR TONHÖJD ===
-                // 1. Normalisera Z-värdet: Omvandla avståndet till ett värde mellan 0.0 och 1.0
-                // Detta garanterar att NÄRA ger ett värde nära 0, och LÅNGT BORT ger ett värde nära 1.
-                const normalizedZ = (fingerTip.z - NEAR_Z) / (FAR_Z - NEAR_Z);
-                const pitchControl = Math.max(0, Math.min(1, normalizedZ));
+                // === SLUTGILTIG LOGIK FÖR TONHÖJD ===
+
+                // 1. Beräkna hur långt bort handen är, på en skala från 0.0 till 1.0.
+                // Vi inverterar logiken här så att NÄRA blir 0 och LÅNGT BORT blir 1.
+                const rawDistance = (fingerTip.z - NEAR_Z) / (FAR_Z - NEAR_Z);
+                const pitchControl = Math.max(0, Math.min(1, rawDistance));
                 
-                // 2. Mappa tonhöjden till det normaliserade värdet
-                const freq = 40 + pitchControl * 960; // 40Hz (låg) till 1000Hz (hög)
+                // 2. Mappa tonhöjden från 40 Hz till 1000 Hz baserat på avståndet.
+                const freq = 40 + pitchControl * 960;
 
                 // 3. Radiell volym (högst i mitten)
                 const distanceFromCenter = Math.sqrt(Math.pow(fingerTip.x - 0.5, 2) + Math.pow(fingerTip.y - 0.5, 2));
@@ -119,10 +119,12 @@ function onResults(results) {
                 gains[handIndex].gain.setTargetAtTime(vol, audioCtx.currentTime, 0.01);
 
                 // Uppdatera UI
-                const freqLabel = document.getElementById(`freq${handIndex + 1}`);
-                const volLabel = document.getElementById(`vol${handIndex + 1}`);
-                if (freqLabel) freqLabel.textContent = `${Math.round(freq)} Hz`;
-                if (volLabel) volLabel.textContent = `${Math.round(vol * 100)}%`;
+                document.getElementById(`freq${handIndex + 1}`).textContent = `${Math.round(freq)} Hz`;
+                document.getElementById(`vol${handIndex + 1}`).textContent = `${Math.round(vol * 100)}%`;
+
+                // Uppdatera debug-info
+                document.getElementById('debugZ').textContent = fingerTip.z.toFixed(3);
+                document.getElementById('debugPitch').textContent = pitchControl.toFixed(3);
             }
         });
     }

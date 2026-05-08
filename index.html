@@ -5,21 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Camera Theremin - Dual Hand</title>
   <link rel="stylesheet" href="style.css">
-<style>
-        #canvasContainer {
-            position: relative;
-            width: 100%;
-            max-width: 1280px; /* Sätter en maxbredd på dator */
-            margin: auto; /* Centrerar på större skärmar */
-            aspect-ratio: 1280 / 720; /* Tvingar fram 16:9-proportioner */
-        }
+ <style>
+        /* Denna stil ser till att canvasen fyller skärmens bredd 
+           men ALLTID behåller 16:9-proportioner utan att tryckas ihop. */
         #output_canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
             width: 100%;
-            height: 100%;
+            height: auto;
+            aspect-ratio: 16 / 9;
             transform: scaleX(-1); /* Behåller spegelvändningen */
+            display: block; /* Förhindrar konstiga marginaler */
         }
     </style>
 </head>
@@ -33,6 +27,17 @@
     <div id="canvasContainer" style="display:none;">
       <video id="input_video" style="display: none;"></video>
       <canvas id="output_canvas" width="1280" height="720"></canvas>
+
+	<div class="ui-container" id="uiContainer" style="display:none;">
+        	<p>Hand 1 (Grön): <span id="freq1">0 Hz</span> | <span id="vol1">0%</span></p>
+        	<p>Hand 2 (Röd): <span id="freq2">0 Hz</span> | <span id="vol2">0%</span></p>
+   	</div>
+
+ <!-- NYTT: KLISTRA IN DETTA BLOCK -->
+    <div id="debugInfo" style="display:none; padding: 10px; background-color: #333; color: white; font-family: monospace;">
+        <p>DEBUG Z-axel: <span id="debugZ">...</span></p>
+        <p>DEBUG Pitch-kontroll (0-1): <span id="debugPitch">...</span></p>
+    </div>
       
       <div class="info-grid">
         <div class="hand-info hand1">
