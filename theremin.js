@@ -7,6 +7,9 @@ const canvasContainer = document.getElementById('canvasContainer');
 const controls = document.getElementById('controls');
 const masterVolumeSlider = document.getElementById('masterVolume');
 
+// Mirror the video element so controls feel natural
+videoElement.style.transform = 'scaleX(-1)';
+
 // --- Ljudvariabler ---
 let audioCtx;
 const oscillator = [null]; // Vi behöver bara en
@@ -53,12 +56,20 @@ function startTheremin() {
 }
 
 function onResults(results) {
-    const pitchDisplay = document.getElementById('pitchDisplay');
-    const volumeDisplay = document.getElementById('volumeDisplay');
-
-    canvasCtx.save();
-    canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-    canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
+  // Ensure canvas matches the actual video pixel size to avoid distortion
+  if (videoElement.videoWidth && videoElement.videoHeight) {
+    canvasElement.width = videoElement.videoWidth;
+    canvasElement.height = videoElement.videoHeight;
+  }
+ 
+  // Clear and draw mirrored image so things look like a mirror
+  canvasCtx.save();
+  canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+ 
+  // Mirror horizontally when drawing so overlays match mirrored video
+  canvasCtx.translate(canvasElement.width, 0);
+  canvasCtx.scale(-1, 1);
+  canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
 
     let finalFreq = 82;
     let finalVol = 0;

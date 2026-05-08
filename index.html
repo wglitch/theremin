@@ -2,58 +2,63 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>AI Theremin</title>
+  <title>Theremin</title>
   <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils@0.6/control_utils.css" crossorigin="anonymous">
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3/camera_utils.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils@0.6/control_utils.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils@0.3/drawing_utils.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4/hands.js" crossorigin="anonymous"></script>
   <style>
-    body {
-        font-family: sans-serif;
-        background-color: #ffffff;
-        color: #000000;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 20px;
-    }
-    .container {
-        position: relative;
-        width: 1280px;
-        height: 720px;
-        display: none; /* Dold från början */
-    }
-    #output_canvas {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-    }
-    #input_video {
-        display: none;
-    }
-    .controls {
-        margin-top: 20px;
-        padding: 15px;
-        background-color: #f0f0f0;
-        border: 1px solid #cccccc;
-        border-radius: 8px;
-        width: 50%;
-        text-align: center;
-    }
-    #startButton {
-        font-size: 24px;
-        padding: 15px 30px;
-        cursor: pointer;
-    }
-  </style>
+body {
+  font-family: sans-serif;
+  background: linear-gradient(135deg,#0f4c81,#3aa0d6); /* blått tema */
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
+.container {
+  position: relative;
+  display:none;
+  max-width:1280px;
+  width:100%;
+}
+#output_canvas {
+  position:absolute;
+  left:0;
+  top:0;
+  width:100%;
+  height:auto;
+}
+#input_video {
+  display:none;
+}
+.controls {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 8px;
+  width: 50%;
+  text-align: center;
+  color: #fff;
+}
+#startButton {
+  font-size: 20px;
+  padding: 12px 24px;
+  cursor: pointer;
+  background: #ffffff;
+  color: #0f4c81;
+  border-radius: 6px;
+  border: none;
+}
+</style>
 </head>
 
 <body>
   <h1>AI Theremin</h1>
-  <p>Använd höger hand (avstånd) för tonhöjd och vänster hand (vänster/höger) för volym.</p>
+  <p>Use right hand (distance) for pitch and left hand (left/right) for volume.</p>
 
   <button id="startButton">Starta Theremin</button>
 
