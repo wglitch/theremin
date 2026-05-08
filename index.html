@@ -10,44 +10,12 @@
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
 
     <style>
-        body {
-            font-family: sans-serif;
-            background-color: #222;
-            color: #eee;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-        }
-        button {
-            font-size: 1.5rem;
-            padding: 15px 30px;
-            cursor: pointer;
-        }
-        #canvasContainer {
-            position: relative;
-            width: 100%;
-            max-width: 960px; /* Sätter en maxbredd på dator */
-            margin: 20px auto; /* Centrerar */
-        }
-        #output_canvas {
-            width: 100%;
-            height: auto;
-            aspect-ratio: 16 / 9; /* Tvingar 16:9, fixar ihoptryckt bild */
-            transform: scaleX(-1);
-            display: block;
-        }
-        .controls, .debug-info {
-            text-align: center;
-            font-size: 1.2rem;
-        }
-        .debug-info {
-            margin-top: 15px;
-            padding: 10px;
-            background-color: #111;
-            border: 1px solid #444;
-            font-family: monospace;
-        }
+        body { font-family: sans-serif; background-color: #222; color: #eee; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        button { font-size: 1.5rem; padding: 15px 30px; cursor: pointer; }
+        #canvasContainer { position: relative; width: 100%; max-width: 960px; margin: 20px auto; }
+        #output_canvas { width: 100%; height: auto; aspect-ratio: 16 / 9; transform: scaleX(-1); display: block; }
+        .controls, .debug-info { text-align: center; font-size: 1.2rem; }
+        .debug-info { margin-top: 15px; padding: 10px; background-color: #111; border: 1px solid #444; font-family: monospace; }
     </style>
 </head>
 <body>
@@ -60,19 +28,18 @@
         <canvas id="output_canvas" width="1280" height="720"></canvas>
     </div>
 
-    <!-- UI för Hertz och Volym -->
     <div class="controls" id="controls" style="display:none;">
         <p>Hand 1 (Grön): <span id="freq1">0 Hz</span> | <span id="vol1">0%</span></p>
         <p>Hand 2 (Röd): <span id="freq2">0 Hz</span> | <span id="vol2">0%</span></p>
     </div>
 
-    <!-- DEBUG-RUTAN SOM SAKNADES -->
     <div class="debug-info" id="debugInfo" style="display:none;">
         <p>DEBUG Z-axel: <span id="debugZ">...</span></p>
         <p>DEBUG Pitch-kontroll (0-1): <span id="debugPitch">...</span></p>
     </div>
 
-    <script type="module" src="theremin.js"></script>
+    <!-- VIKTIGT: Ingen type="module" här! -->
+    <script src="theremin.js"></script>
 
 </body>
 </html>
