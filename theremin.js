@@ -244,7 +244,7 @@ function onResults(results) {
 
     if (results.multiHandLandmarks && results.multiHandedness) {
         results.multiHandLandmarks.forEach((landmarks, i) => {
-            const side = results.multiHandedness[i].label;
+            const side = getPlayerSide(results.multiHandedness[i].label);
             if (!handStates[side]) return;
 
             updateHandState(side, landmarks);
@@ -253,6 +253,10 @@ function onResults(results) {
 
     updateAudio();
     drawScope();
+}
+
+function getPlayerSide(mediaPipeSide) {
+    return mediaPipeSide === 'Left' ? 'Right' : 'Left';
 }
 
 function updateHandState(side, landmarks) {
@@ -400,7 +404,6 @@ function drawVoice(side) {
 
     canvasCtx.font = `${Math.max(12, width * 0.018)}px Courier New, monospace`;
     canvasCtx.textAlign = 'center';
-    canvasCtx.fillText(`${settings.name}`, displayX, displayY - height * 0.085);
     canvasCtx.restore();
 }
 
@@ -449,13 +452,31 @@ function drawScanner() {
     const cy = height / 2;
     const radius = Math.min(width, height) * 0.38;
     const angle = time % (Math.PI * 2);
+    const orange = handStates.Right;
+    const jitterAmount = orange.volumeControl * radius * 0.026;
+    const jitterCycles = 7 + orange.pitchControl * 18;
+    const segments = 30;
+    const perpendicular = angle + Math.PI / 2;
 
     canvasCtx.save();
-    canvasCtx.strokeStyle = 'rgba(240, 106, 47, 0.42)';
-    canvasCtx.lineWidth = Math.max(1, width * 0.002);
+    canvasCtx.strokeStyle = `rgba(240, 106, 47, ${0.28 + orange.volumeControl * 0.34})`;
+    canvasCtx.lineWidth = Math.max(1, width * (0.0018 + orange.volumeControl * 0.0012));
     canvasCtx.beginPath();
-    canvasCtx.moveTo(cx, cy);
-    canvasCtx.lineTo(cx + Math.cos(angle) * radius, cy + Math.sin(angle) * radius);
+
+    for (let i = 0; i <= segments; i += 1) {
+        const progress = i / segments;
+        const distanceFromCenter = radius * progress;
+        const vibration = Math.sin(progress * Math.PI * 2 * jitterCycles + performance.now() * 0.018) * jitterAmount * progress;
+        const x = cx + Math.cos(angle) * distanceFromCenter + Math.cos(perpendicular) * vibration;
+        const y = cy + Math.sin(angle) * distanceFromCenter + Math.sin(perpendicular) * vibration;
+
+        if (i === 0) {
+            canvasCtx.moveTo(x, y);
+        } else {
+            canvasCtx.lineTo(x, y);
+        }
+    }
+
     canvasCtx.stroke();
     canvasCtx.restore();
 }
