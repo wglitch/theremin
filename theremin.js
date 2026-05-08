@@ -60,8 +60,8 @@ function startTheremin() {
 } // Slut på startTheremin
 
 function onResults(results) {
-    const NEAR_Z = -0.05;
-    const FAR_Z = -0.9;
+    const NEAR_Z = -0.5;
+    const FAR_Z = 0.1;
 
     canvasCtx.save();
     canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
