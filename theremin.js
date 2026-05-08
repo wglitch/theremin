@@ -92,15 +92,24 @@ function onResults(results) {
                 drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, { color: handColor, lineWidth: 5 });
                 drawLandmarks(canvasCtx, landmarks, { color: handColor, lineWidth: 2 });
                 
-                const fingerTip = landmarks[8];
-                const x = fingerTip.x;
-                const y = 1 - fingerTip.y;
+                const fingerTip = landmarks[8]; // Pekfingertoppen
+                
+                // === NY LOGIK FÖR BORDSLÄGE ===
 
-                const freq = 100 + x * 800;
-                const vol = y * 0.5;
+                // 1. Tonhöjd styrs av HÖJDEN (z-axeln).
+                // z-värdet är negativt och blir "mer negativt" ju längre bort handen är.
+                // Vi omvandlar det till ett positivt värde mellan ca 0.0 och 1.0.
+                const height = Math.min(1, Math.max(0, (fingerTip.z * -1 - 0.1) * 2)); 
+                const freq = 100 + height * 900; // Tonhöjd baserat på höjd
+
+                // 2. Volym styrs av SIDLED (x-axeln).
+                const vol = fingerTip.x;
+
+                // Uppdatera ljudet
                 oscillators[handIndex].frequency.setTargetAtTime(freq, audioCtx.currentTime, 0.01);
                 gains[handIndex].gain.setTargetAtTime(vol, audioCtx.currentTime, 0.01);
 
+                // Uppdatera UI
                 const freqLabel = document.getElementById(`freq${handIndex + 1}`);
                 const volLabel = document.getElementById(`vol${handIndex + 1}`);
                 if (freqLabel) freqLabel.textContent = `${Math.round(freq)} Hz`;
@@ -109,6 +118,7 @@ function onResults(results) {
         });
     }
 
+    // Stäng av ljudet för händer som inte längre syns
     detectedHands.forEach((isDetected, index) => {
         if (!isDetected && gains[index]) {
             gains[index].gain.setTargetAtTime(0, audioCtx.currentTime, 0.05);
@@ -116,3 +126,4 @@ function onResults(results) {
     });
 
     canvasCtx.restore();
+}
