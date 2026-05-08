@@ -2,6 +2,11 @@
 // HELA DIN THEREMIN.JS - KORREKT VERSION
 // =================================================================
 
+// HÄMTA DEBUG-ELEMENTEN EN GÅNG HÖGST UPP I FILEN
+const debugInfo = document.getElementById('debugInfo'); 
+const debugZ = document.getElementById('debugZ');
+const debugPitch = document.getElementById('debugPitch');
+
 // 1. Hämta alla HTML-element vi behöver
 const videoElement = document.getElementById('input_video');
 const canvasElement = document.getElementById('output_canvas');
@@ -36,13 +41,15 @@ function initAudio() {
 function startTheremin() {
     initAudio();
     console.log('Theremin startad!');
-
+ 
     // Dölj startknappen
     startButton.style.display = 'none';
-    // Visa canvas och kontroller
+    
+    // Visa canvas, kontroller OCH den nya debug-rutan
     canvasContainer.style.display = 'block';
     controls.style.display = 'block';
-
+    debugInfo.style.display = 'block'; // Denna rad gör debug-rutan synlig
+ 
     const camera = new Camera(videoElement, {
         onFrame: async () => {
             await hands.send({ image: videoElement });
@@ -51,7 +58,7 @@ function startTheremin() {
         height: 720
     });
     camera.start();
-}
+}}
 
 // Lyssna på klick på startknappen
 startButton.addEventListener('click', startTheremin);
@@ -78,9 +85,8 @@ hands.onResults(onResults);
 // 5. Huvudfunktionen som körs för varje bildruta från kameran
 function onResults(results) {
     // --- Konstanter för finjustering ---
-    const NEAR_Z = -0.05; 
-    const FAR_Z = -0.9;
-    // ------------------------------------
+    const NEAR_Z = -0.05; // Värdet när handen är NÄRA för LÄGSTA tonen
+    const FAR_Z = -0.9;   // Värdet när handen är LÅNGT BORT för HÖGSTA tonen
 
     canvasCtx.save();
     canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
@@ -99,18 +105,25 @@ function onResults(results) {
                 drawLandmarks(canvasCtx, landmarks, { color: handColor, lineWidth: 2 });
                 
                 const fingerTip = landmarks[8];
+                const zValue = fingerTip.z;
                 
-                // === SLUTGILTIG LOGIK FÖR TONHÖJD ===
+                // === SLUTGILTIG, KORREKT LOGIK FÖR TONHÖJD ===
 
-                // 1. Beräkna hur långt bort handen är, på en skala från 0.0 till 1.0.
-                // Vi inverterar logiken här så att NÄRA blir 0 och LÅNGT BORT blir 1.
-                const rawDistance = (fingerTip.z - NEAR_Z) / (FAR_Z - NEAR_Z);
-                const pitchControl = Math.max(0, Math.min(1, rawDistance));
+                // Steg 1: Normalisera avståndet.
+                // Vi omvandlar Z-värdet till en procentsats (0.0 till 1.0) mellan NEAR_Z och FAR_Z.
+                // Detta är den matematiskt korrekta formeln för att göra detta.
+                let pitchControl = (zValue - NEAR_Z) / (FAR_Z - NEAR_Z);
                 
-                // 2. Mappa tonhöjden från 40 Hz till 1000 Hz baserat på avståndet.
-                const freq = 40 + pitchControl * 960;
+                // Steg 2: Säkerställ att värdet håller sig inom 0.0 och 1.0.
+                pitchControl = Math.max(0, Math.min(1, pitchControl));
 
-                // 3. Radiell volym (högst i mitten)
+                // Resultat:
+                // Om zValue är -0.05 (NÄRA), blir pitchControl 0.0 -> LÅG TON.
+                // Om zValue är -0.9 (LÅNGT BORT), blir pitchControl 1.0 -> HÖG TON.
+
+                const freq = 40 + pitchControl * 960; // Mappa till 40Hz - 1000Hz
+
+                // Radiell volym
                 const distanceFromCenter = Math.sqrt(Math.pow(fingerTip.x - 0.5, 2) + Math.pow(fingerTip.y - 0.5, 2));
                 const vol = Math.max(0, 1 - (distanceFromCenter / 0.707));
 
@@ -118,13 +131,13 @@ function onResults(results) {
                 oscillators[handIndex].frequency.setTargetAtTime(freq, audioCtx.currentTime, 0.01);
                 gains[handIndex].gain.setTargetAtTime(vol, audioCtx.currentTime, 0.01);
 
-                // Uppdatera UI
+                // Uppdatera UI (med rätt element från din HTML)
                 document.getElementById(`freq${handIndex + 1}`).textContent = `${Math.round(freq)} Hz`;
                 document.getElementById(`vol${handIndex + 1}`).textContent = `${Math.round(vol * 100)}%`;
 
                 // Uppdatera debug-info
-                document.getElementById('debugZ').textContent = fingerTip.z.toFixed(3);
-                document.getElementById('debugPitch').textContent = pitchControl.toFixed(3);
+                debugZ.textContent = zValue.toFixed(3);
+                debugPitch.textContent = pitchControl.toFixed(3);
             }
         });
     }
