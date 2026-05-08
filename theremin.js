@@ -77,10 +77,9 @@ hands.onResults(onResults);
 // 5. Huvudfunktionen som körs för varje bildruta från kameran
 function onResults(results) {
     // --- Konstanter för finjustering ---
-    // Justera dessa värden för att ändra känsligheten.
-    // NEAR_Z: Hur nära handen måste vara för lägsta tonen. Närmare 0 är närmare skärmen.
+    // Låg ton när handen är på detta avstånd (närmare 0 = närmare skärmen)
     const NEAR_Z = -0.05; 
-    // FAR_Z: Hur långt bort handen måste vara för högsta tonen. Mer negativt är längre bort.
+    // Hög ton när handen är på detta avstånd (mer negativt = längre bort)
     const FAR_Z = -0.9;
     // ------------------------------------
 
@@ -102,16 +101,17 @@ function onResults(results) {
                 
                 const fingerTip = landmarks[8]; // Pekfingertoppen
                 
-                // === FÖRBÄTTRAD LOGIK ===
-
-                // 1. Känsligare tonhöjd (40-1000 Hz)
+                // === KORREKT LOGIK FÖR TONHÖJD ===
+                // 1. Normalisera Z-värdet: Omvandla avståndet till ett värde mellan 0.0 och 1.0
+                // Detta garanterar att NÄRA ger ett värde nära 0, och LÅNGT BORT ger ett värde nära 1.
                 const normalizedZ = (fingerTip.z - NEAR_Z) / (FAR_Z - NEAR_Z);
-                const pitchControl = Math.max(0, Math.min(1, normalizedZ)); // Se till att värdet är mellan 0 och 1
-                const freq = 40 + pitchControl * 960; // 40 Hz bas, 960 Hz omfång
+                const pitchControl = Math.max(0, Math.min(1, normalizedZ));
+                
+                // 2. Mappa tonhöjden till det normaliserade värdet
+                const freq = 40 + pitchControl * 960; // 40Hz (låg) till 1000Hz (hög)
 
-                // 2. Radiell volym (högst i mitten)
+                // 3. Radiell volym (högst i mitten)
                 const distanceFromCenter = Math.sqrt(Math.pow(fingerTip.x - 0.5, 2) + Math.pow(fingerTip.y - 0.5, 2));
-                // Max avstånd är från centrum (0.5,0.5) till ett hörn (0,0), vilket är ~0.707
                 const vol = Math.max(0, 1 - (distanceFromCenter / 0.707));
 
                 // Uppdatera ljudet
