@@ -76,6 +76,14 @@ hands.onResults(onResults);
 
 // 5. Huvudfunktionen som körs för varje bildruta från kameran
 function onResults(results) {
+    // --- Konstanter för finjustering ---
+    // Justera dessa värden för att ändra känsligheten.
+    // NEAR_Z: Hur nära handen måste vara för lägsta tonen. Närmare 0 är närmare skärmen.
+    const NEAR_Z = -0.05; 
+    // FAR_Z: Hur långt bort handen måste vara för högsta tonen. Mer negativt är längre bort.
+    const FAR_Z = -0.6;
+    // ------------------------------------
+
     canvasCtx.save();
     canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
     canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
@@ -94,16 +102,17 @@ function onResults(results) {
                 
                 const fingerTip = landmarks[8]; // Pekfingertoppen
                 
-                // === KORRIGERAD LOGIK FÖR BORDSLÄGE ===
+                // === FÖRBÄTTRAD LOGIK ===
 
-                // 1. Tonhöjd styrs av HÖJDEN (z-axeln).
-                // Vi inverterar värdet så att NÄRA = LÅG TON och LÅNGT BORT = HÖG TON.
-                const rawHeight = Math.min(1, Math.max(0, (fingerTip.z * -1 - 0.1) * 2));
-                const pitchControl = 1 - rawHeight; // Här sker inverteringen!
-                const freq = 100 + pitchControl * 900; 
+                // 1. Känsligare tonhöjd (40-1000 Hz)
+                const normalizedZ = (fingerTip.z - NEAR_Z) / (FAR_Z - NEAR_Z);
+                const pitchControl = Math.max(0, Math.min(1, normalizedZ)); // Se till att värdet är mellan 0 och 1
+                const freq = 40 + pitchControl * 960; // 40 Hz bas, 960 Hz omfång
 
-                // 2. Volym styrs av SIDLED (x-axeln).
-                const vol = fingerTip.x;
+                // 2. Radiell volym (högst i mitten)
+                const distanceFromCenter = Math.sqrt(Math.pow(fingerTip.x - 0.5, 2) + Math.pow(fingerTip.y - 0.5, 2));
+                // Max avstånd är från centrum (0.5,0.5) till ett hörn (0,0), vilket är ~0.707
+                const vol = Math.max(0, 1 - (distanceFromCenter / 0.707));
 
                 // Uppdatera ljudet
                 oscillators[handIndex].frequency.setTargetAtTime(freq, audioCtx.currentTime, 0.01);
