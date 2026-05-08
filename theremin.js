@@ -85,7 +85,9 @@ function onResults(results) {
                 let pitchControl = (zValue - NEAR_Z) / (FAR_Z - NEAR_Z);
                 pitchControl = Math.max(0, Math.min(1, pitchControl));
                 
-                const freq = 40 + pitchControl * 960;
+                const baseFreq = 82; // Lägsta ton (E2, som en gitarr)
+		const range = 441;   // Spannet upp till C5 (523 Hz - 82 Hz = 441)
+		const freq = baseFreq + pitchControl * range;
                 const distanceFromCenter = Math.sqrt(Math.pow(fingerTip.x - 0.5, 2) + Math.pow(fingerTip.y - 0.5, 2));
                 const vol = Math.max(0, 1 - (distanceFromCenter / 0.707));
 
