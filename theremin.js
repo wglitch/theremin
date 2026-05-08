@@ -116,4 +116,3 @@ function onResults(results) {
     });
 
     canvasCtx.restore();
-}
