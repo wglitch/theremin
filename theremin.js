@@ -38,7 +38,7 @@ function initAudio() {
         gains[i].connect(audioCtx.destination);
         oscillators[i].start();
     }
-}
+} // Slut på initAudio
 
 function startTheremin() {
     initAudio();
@@ -57,7 +57,7 @@ function startTheremin() {
         height: 720
     });
     camera.start();
-}
+} // Slut på startTheremin
 
 function onResults(results) {
     const NEAR_Z = -0.05;
@@ -97,9 +97,9 @@ function onResults(results) {
 
                 debugZ.textContent = zValue.toFixed(3);
                 debugPitch.textContent = pitchControl.toFixed(3);
-            }
-        });
-    }
+            } // Slut på if (handIndex < 2)
+        }); // Slut på forEach
+    } // Slut på if (results.multiHandLandmarks)
 
     detectedHands.forEach((isDetected, index) => {
         if (!isDetected && gains[index]) {
@@ -108,7 +108,7 @@ function onResults(results) {
     });
 
     canvasCtx.restore();
-}
+} // Slut på onResults
 
 // --- Starta applikationen ---
 startButton.addEventListener('click', startTheremin);
