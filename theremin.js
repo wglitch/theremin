@@ -1,5 +1,5 @@
 // =================================================================
-// HELA DIN THEREMIN.JS - BÖRJA OM MED DENNA KOD
+// HELA DIN THEREMIN.JS - KORREKT VERSION
 // =================================================================
 
 // 1. Hämta alla HTML-element vi behöver
@@ -33,18 +33,15 @@ function initAudio() {
 
 // 3. Funktion för att starta allt (kameran och UI)
 function startTheremin() {
-    // Starta ljudkontexten
     initAudio();
+    console.log('Theremin startad!');
 
-    // === DEN HÄR DELEN ÄR DEN VIKTIGA FIXEN ===
     // Dölj startknappen
     startButton.style.display = 'none';
     // Visa canvas och kontroller
     canvasContainer.style.display = 'block';
     controls.style.display = 'block';
-    // ==========================================
 
-    // Starta kameran
     const camera = new Camera(videoElement, {
         onFrame: async () => {
             await hands.send({ image: videoElement });
@@ -79,39 +76,31 @@ hands.onResults(onResults);
 
 // 5. Huvudfunktionen som körs för varje bildruta från kameran
 function onResults(results) {
-    // Rensa canvasen
     canvasCtx.save();
     canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-
-    // Rita kamerabilden
     canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
 
-    const detectedHands = [false, false]; // [Hand 1, Hand 2]
+    const detectedHands = [false, false];
 
-    // Om händer hittas...
     if (results.multiHandLandmarks && results.multiHandedness) {
         results.multiHandLandmarks.forEach((landmarks, i) => {
             const handIndex = results.multiHandedness[i].label === 'Left' ? 0 : 1;
             if (handIndex < 2) {
                 detectedHands[handIndex] = true;
-                const handColor = handIndex === 0 ? '#00FF00' : '#FF0000'; // Grön för vänster, röd för höger
+                const handColor = handIndex === 0 ? '#00FF00' : '#FF0000';
 
-                // Rita händer
                 drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, { color: handColor, lineWidth: 5 });
                 drawLandmarks(canvasCtx, landmarks, { color: handColor, lineWidth: 2 });
                 
-                // Hämta pekfingertoppens position
                 const fingerTip = landmarks[8];
                 const x = fingerTip.x;
-                const y = 1 - fingerTip.y; // Invertera Y-axeln så att högre upp = högre värde
+                const y = 1 - fingerTip.y;
 
-                // Uppdatera ljud
-                const freq = 100 + x * 800; // Frekvens baserat på X
-                const vol = y * 0.5;        // Volym baserat på Y
+                const freq = 100 + x * 800;
+                const vol = y * 0.5;
                 oscillators[handIndex].frequency.setTargetAtTime(freq, audioCtx.currentTime, 0.01);
                 gains[handIndex].gain.setTargetAtTime(vol, audioCtx.currentTime, 0.01);
 
-                // Uppdatera UI (matchar din HTML)
                 const freqLabel = document.getElementById(`freq${handIndex + 1}`);
                 const volLabel = document.getElementById(`vol${handIndex + 1}`);
                 if (freqLabel) freqLabel.textContent = `${Math.round(freq)} Hz`;
@@ -120,7 +109,6 @@ function onResults(results) {
         });
     }
 
-    // Stäng av ljudet för händer som inte längre syns
     detectedHands.forEach((isDetected, index) => {
         if (!isDetected && gains[index]) {
             gains[index].gain.setTargetAtTime(0, audioCtx.currentTime, 0.05);
