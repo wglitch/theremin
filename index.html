@@ -30,57 +30,65 @@
         <canvas id="output_canvas"></canvas>
       </div>
 
-      <div class="meter-bank" aria-live="polite">
-        <div class="analog-meter meter-left" id="leftMeter">
-          <div class="meter-face">
-            <span class="meter-label">YELLOW FIELD</span>
-            <div class="meter-scale" aria-hidden="true">
-              <span>65</span>
-              <span>110</span>
-              <span>220</span>
-              <span>440</span>
-              <span>660</span>
+      <div class="channel-bank" id="controls" aria-live="polite">
+        <div class="channel-strip channel-yellow">
+          <div class="analog-meter meter-left" id="leftMeter">
+            <div class="meter-face">
+              <span class="meter-label">YELLOW FIELD</span>
+              <div class="meter-scale" aria-hidden="true">
+                <span>65</span>
+                <span>110</span>
+                <span>220</span>
+                <span>440</span>
+                <span>660</span>
+              </div>
+              <div class="meter-needle"></div>
+              <strong id="leftPitchDisplay">Hz</strong>
             </div>
-            <div class="meter-needle"></div>
-            <strong id="leftPitchDisplay">Hz</strong>
+          </div>
+
+          <div class="strip-controls">
+            <div class="knob-control">
+              <button class="knob" id="leftEdge" type="button" role="slider" aria-label="Yellow edge" aria-valuemin="0" aria-valuemax="100" aria-valuenow="8" data-value="0.08"></button>
+              <span>Edge</span>
+            </div>
+            <div class="knob-control">
+              <button class="knob" id="leftSpace" type="button" role="slider" aria-label="Yellow space" aria-valuemin="0" aria-valuemax="100" aria-valuenow="24" data-value="0.24"></button>
+              <span>Space</span>
+            </div>
           </div>
         </div>
-        <div class="analog-meter meter-right" id="rightMeter">
-          <div class="meter-face">
-            <span class="meter-label">ORANGE FIELD</span>
-            <div class="meter-scale" aria-hidden="true">
-              <span>82</span>
-              <span>147</span>
-              <span>294</span>
-              <span>587</span>
-              <span>880</span>
+
+        <div class="channel-strip channel-orange">
+          <div class="analog-meter meter-right" id="rightMeter">
+            <div class="meter-face">
+              <span class="meter-label">ORANGE FIELD</span>
+              <div class="meter-scale" aria-hidden="true">
+                <span>82</span>
+                <span>147</span>
+                <span>294</span>
+                <span>587</span>
+                <span>880</span>
+              </div>
+              <div class="meter-needle"></div>
+              <strong id="rightPitchDisplay">Hz</strong>
             </div>
-            <div class="meter-needle"></div>
-            <strong id="rightPitchDisplay">Hz</strong>
+          </div>
+
+          <div class="strip-controls">
+            <div class="knob-control">
+              <button class="knob" id="rightSpace" type="button" role="slider" aria-label="Orange space" aria-valuemin="0" aria-valuemax="100" aria-valuenow="18" data-value="0.18"></button>
+              <span>Space</span>
+            </div>
+            <div class="knob-control">
+              <button class="knob" id="rightEdge" type="button" role="slider" aria-label="Orange edge" aria-valuemin="0" aria-valuemax="100" aria-valuenow="4" data-value="0.04"></button>
+              <span>Edge</span>
+            </div>
           </div>
         </div>
       </div>
 
       <button id="startButton" class="start-button">Start instrument</button>
-
-      <div class="control-deck" id="controls">
-        <div class="knob-control channel-yellow">
-          <button class="knob" id="leftEdge" type="button" role="slider" aria-label="Yellow edge" aria-valuemin="0" aria-valuemax="100" aria-valuenow="8" data-value="0.08"></button>
-          <span>Edge</span>
-        </div>
-        <div class="knob-control channel-yellow">
-          <button class="knob" id="leftSpace" type="button" role="slider" aria-label="Yellow space" aria-valuemin="0" aria-valuemax="100" aria-valuenow="24" data-value="0.24"></button>
-          <span>Space</span>
-        </div>
-        <div class="knob-control channel-orange">
-          <button class="knob" id="rightSpace" type="button" role="slider" aria-label="Orange space" aria-valuemin="0" aria-valuemax="100" aria-valuenow="18" data-value="0.18"></button>
-          <span>Space</span>
-        </div>
-        <div class="knob-control channel-orange">
-          <button class="knob" id="rightEdge" type="button" role="slider" aria-label="Orange edge" aria-valuemin="0" aria-valuemax="100" aria-valuenow="4" data-value="0.04"></button>
-          <span>Edge</span>
-        </div>
-      </div>
     </section>
   </main>
 
