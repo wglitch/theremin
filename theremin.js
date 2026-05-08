@@ -5,16 +5,18 @@ const startButton = document.getElementById('startButton');
 const canvasContainer = document.getElementById('canvasContainer');
 const controls = document.getElementById('controls');
 
-const masterVolumeSlider = document.getElementById('masterVolume');
-const leftDriveSlider = document.getElementById('leftDrive');
-const rightDriveSlider = document.getElementById('rightDrive');
-const leftReverbSlider = document.getElementById('leftReverb');
-const rightReverbSlider = document.getElementById('rightReverb');
+const MASTER_GAIN = 0.72;
+const knobs = {
+    leftEdge: document.getElementById('leftEdge'),
+    leftSpace: document.getElementById('leftSpace'),
+    rightEdge: document.getElementById('rightEdge'),
+    rightSpace: document.getElementById('rightSpace'),
+};
 
 const leftPitchDisplay = document.getElementById('leftPitchDisplay');
 const rightPitchDisplay = document.getElementById('rightPitchDisplay');
-const leftVolumeDisplay = document.getElementById('leftVolumeDisplay');
-const rightVolumeDisplay = document.getElementById('rightVolumeDisplay');
+const leftMeter = document.getElementById('leftMeter');
+const rightMeter = document.getElementById('rightMeter');
 
 videoElement.style.transform = 'scaleX(-1)';
 
@@ -27,21 +29,21 @@ const VOICE_SETTINGS = {
         pan: -0.36,
         formants: [360, 760],
         pitchDisplay: leftPitchDisplay,
-        volumeDisplay: leftVolumeDisplay,
-        driveSlider: leftDriveSlider,
-        reverbSlider: leftReverbSlider,
+        meter: leftMeter,
+        edgeKnob: knobs.leftEdge,
+        spaceKnob: knobs.leftSpace,
     },
     Right: {
         name: 'Aa',
         color: '#f06a2f',
         minHz: 82,
-        maxHz: 1046,
+        maxHz: 880,
         pan: 0.36,
-        formants: [780, 1220],
+        formants: [620, 1080],
         pitchDisplay: rightPitchDisplay,
-        volumeDisplay: rightVolumeDisplay,
-        driveSlider: rightDriveSlider,
-        reverbSlider: rightReverbSlider,
+        meter: rightMeter,
+        edgeKnob: knobs.rightEdge,
+        spaceKnob: knobs.rightSpace,
     },
 };
 
@@ -93,7 +95,7 @@ async function initAudio() {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
     masterGain = audioCtx.createGain();
-    masterGain.gain.value = Number(masterVolumeSlider.value);
+    masterGain.gain.value = MASTER_GAIN;
 
     compressor = audioCtx.createDynamicsCompressor();
     compressor.threshold.value = -18;
@@ -132,14 +134,14 @@ function createVoice(side) {
     const now = audioCtx.currentTime;
 
     const oscillator = audioCtx.createOscillator();
-    oscillator.type = side === 'Left' ? 'triangle' : 'sawtooth';
+    oscillator.type = 'triangle';
     oscillator.frequency.setValueAtTime(settings.minHz, now);
 
     const input = audioCtx.createGain();
     input.gain.value = 0.7;
 
-    const formantA = createFormantFilter(settings.formants[0], side === 'Left' ? 7 : 8);
-    const formantB = createFormantFilter(settings.formants[1], side === 'Left' ? 9 : 10);
+    const formantA = createFormantFilter(settings.formants[0], side === 'Left' ? 7 : 4.8);
+    const formantB = createFormantFilter(settings.formants[1], side === 'Left' ? 9 : 5.4);
     const formantAGain = audioCtx.createGain();
     const formantBGain = audioCtx.createGain();
     const bodyGain = audioCtx.createGain();
@@ -150,17 +152,17 @@ function createVoice(side) {
     const panner = audioCtx.createStereoPanner();
     const reverbSend = audioCtx.createGain();
 
-    formantAGain.gain.value = side === 'Left' ? 0.68 : 0.56;
-    formantBGain.gain.value = side === 'Left' ? 0.32 : 0.46;
-    bodyGain.gain.value = side === 'Left' ? 0.24 : 0.18;
+    formantAGain.gain.value = side === 'Left' ? 0.68 : 0.42;
+    formantBGain.gain.value = side === 'Left' ? 0.32 : 0.28;
+    bodyGain.gain.value = side === 'Left' ? 0.24 : 0.36;
     bodyFilter.type = 'lowpass';
-    bodyFilter.frequency.value = side === 'Left' ? 980 : 1500;
+    bodyFilter.frequency.value = side === 'Left' ? 980 : 1180;
     bodyFilter.Q.value = 0.7;
 
     output.gain.value = 0;
     panner.pan.value = settings.pan;
-    reverbSend.gain.value = Number(settings.reverbSlider.value) * 0.38;
-    shaper.curve = makeDistortionCurve(Number(settings.driveSlider.value));
+    reverbSend.gain.value = getKnobValue(settings.spaceKnob) * 0.38;
+    shaper.curve = makeDistortionCurve(getKnobValue(settings.edgeKnob));
     shaper.oversample = '4x';
 
     oscillator.connect(input);
@@ -188,8 +190,8 @@ function createVoice(side) {
         panner,
         shaper,
         reverbSend,
-        driveSlider: settings.driveSlider,
-        reverbSlider: settings.reverbSlider,
+        edgeKnob: settings.edgeKnob,
+        spaceKnob: settings.spaceKnob,
     };
 }
 
@@ -276,7 +278,7 @@ function updateAudio() {
     if (!audioCtx || !voices.Left || !voices.Right) return;
 
     const now = audioCtx.currentTime;
-    masterGain.gain.setTargetAtTime(Number(masterVolumeSlider.value), now, 0.035);
+    masterGain.gain.setTargetAtTime(MASTER_GAIN, now, 0.035);
 
     updateVoice('Left', now);
     updateVoice('Right', now);
@@ -293,15 +295,15 @@ function updateVoice(side, now) {
         state.age += 1;
     }
 
-    const volume = state.active || state.age < 10 ? state.volume * 0.42 : 0;
+    const volume = state.active || state.age < 10 ? state.volume * (side === 'Left' ? 0.42 : 0.34) : 0;
     voice.oscillator.frequency.setTargetAtTime(state.frequency || settings.minHz, now, 0.055);
     voice.output.gain.setTargetAtTime(volume, now, 0.045);
     voice.panner.pan.setTargetAtTime(settings.pan, now, 0.08);
-    voice.reverbSend.gain.setTargetAtTime(Number(settings.reverbSlider.value) * 0.42, now, 0.08);
-    voice.shaper.curve = makeDistortionCurve(Number(settings.driveSlider.value));
+    voice.reverbSend.gain.setTargetAtTime(getKnobValue(settings.spaceKnob) * 0.42, now, 0.08);
+    voice.shaper.curve = makeDistortionCurve(getKnobValue(settings.edgeKnob));
 
-    settings.pitchDisplay.textContent = `${Math.round(state.frequency || settings.minHz)} Hz`;
-    settings.volumeDisplay.textContent = `${Math.round(state.volume * 100)}%`;
+    settings.pitchDisplay.textContent = 'Hz';
+    updateMeter(settings, state);
 }
 
 function resizeCanvas() {
@@ -398,8 +400,18 @@ function drawVoice(side) {
 
     canvasCtx.font = `${Math.max(12, width * 0.018)}px Courier New, monospace`;
     canvasCtx.textAlign = 'center';
-    canvasCtx.fillText(`${settings.name} ${Math.round(state.frequency || settings.minHz)} Hz`, displayX, displayY - height * 0.085);
+    canvasCtx.fillText(`${settings.name}`, displayX, displayY - height * 0.085);
     canvasCtx.restore();
+}
+
+function updateMeter(settings, state) {
+    const range = settings.maxHz - settings.minHz;
+    const normalized = clamp(((state.frequency || settings.minHz) - settings.minHz) / range, 0, 1);
+    const angle = -48 + normalized * 96;
+    const glow = 0.24 + clamp(state.volume, 0, 1) * 0.76;
+
+    settings.meter.style.setProperty('--needle-angle', `${angle}deg`);
+    settings.meter.style.setProperty('--meter-glow', glow.toFixed(3));
 }
 
 function drawWaveform() {
@@ -539,7 +551,7 @@ function createImpulseResponse(context, seconds, decay) {
 function makeDistortionCurve(amount) {
     const samples = 256;
     const curve = new Float32Array(samples);
-    const drive = 1 + amount * 34;
+    const drive = 1 + amount * 18;
 
     for (let i = 0; i < samples; i += 1) {
         const x = (i * 2) / samples - 1;
@@ -547,6 +559,63 @@ function makeDistortionCurve(amount) {
     }
 
     return curve;
+}
+
+function initKnobs() {
+    Object.values(knobs).forEach((knob) => {
+        if (!knob) return;
+
+        setKnobValue(knob, getKnobValue(knob));
+
+        knob.addEventListener('pointerdown', (event) => {
+            event.preventDefault();
+            knob.setPointerCapture(event.pointerId);
+            knob.dataset.dragY = String(event.clientY);
+            knob.dataset.dragValue = String(getKnobValue(knob));
+        });
+
+        knob.addEventListener('pointermove', (event) => {
+            if (!knob.hasPointerCapture(event.pointerId)) return;
+
+            const startY = Number(knob.dataset.dragY);
+            const startValue = Number(knob.dataset.dragValue);
+            const delta = (startY - event.clientY) / 150;
+            setKnobValue(knob, startValue + delta);
+        });
+
+        knob.addEventListener('keydown', (event) => {
+            const step = event.shiftKey ? 0.1 : 0.03;
+            if (event.key === 'ArrowUp' || event.key === 'ArrowRight') {
+                event.preventDefault();
+                setKnobValue(knob, getKnobValue(knob) + step);
+            }
+            if (event.key === 'ArrowDown' || event.key === 'ArrowLeft') {
+                event.preventDefault();
+                setKnobValue(knob, getKnobValue(knob) - step);
+            }
+            if (event.key === 'Home') {
+                event.preventDefault();
+                setKnobValue(knob, 0);
+            }
+            if (event.key === 'End') {
+                event.preventDefault();
+                setKnobValue(knob, 1);
+            }
+        });
+    });
+}
+
+function getKnobValue(knob) {
+    return clamp(Number(knob?.dataset.value || 0), 0, 1);
+}
+
+function setKnobValue(knob, value) {
+    const normalized = clamp(value, 0, 1);
+    const angle = -135 + normalized * 270;
+
+    knob.dataset.value = normalized.toFixed(3);
+    knob.style.setProperty('--knob-angle', `${angle}deg`);
+    knob.setAttribute('aria-valuenow', String(Math.round(normalized * 100)));
 }
 
 function distance(a, b) {
@@ -563,8 +632,16 @@ function lerp(start, end, amount) {
     return start + (end - start) * amount;
 }
 
+initKnobs();
+updateMeter(VOICE_SETTINGS.Left, handStates.Left);
+updateMeter(VOICE_SETTINGS.Right, handStates.Right);
+
 startButton.addEventListener('click', startTheremin);
 window.addEventListener('resize', () => {
-    drawStandby();
+    if (camera) {
+        drawScope();
+    } else {
+        drawStandby();
+    }
 });
 drawStandby();
