@@ -4,6 +4,12 @@ const canvasCtx = canvasElement.getContext('2d');
 const startButton = document.getElementById('startButton');
 const canvasContainer = document.getElementById('canvasContainer');
 const controls = document.getElementById('controls');
+const instrumentShell = document.querySelector('.instrument-shell');
+const operationNotes = document.getElementById('operationNotes');
+const operationNotesTab = document.getElementById('operationNotesTab');
+const serviceNotesButton = document.getElementById('serviceNotesButton');
+const serviceNotesModal = document.getElementById('serviceNotesModal');
+const closeServiceNotes = document.getElementById('closeServiceNotes');
 
 const MASTER_GAIN = 0.72;
 const knobs = {
@@ -215,6 +221,9 @@ async function startTheremin() {
         }
 
         startButton.style.display = 'none';
+        instrumentShell.classList.add('is-armed');
+        operationNotes.classList.add('is-collapsed');
+        operationNotesTab.setAttribute('aria-expanded', 'false');
         canvasContainer.classList.add('is-live');
         controls.classList.add('is-live');
 
@@ -231,7 +240,13 @@ async function startTheremin() {
         }
     } catch (error) {
         startButton.disabled = false;
-        startButton.textContent = 'Start instrument';
+        startButton.style.display = 'block';
+        startButton.textContent = 'Arm sensor';
+        instrumentShell.classList.remove('is-armed');
+        operationNotes.classList.remove('is-collapsed');
+        operationNotesTab.setAttribute('aria-expanded', 'true');
+        canvasContainer.classList.remove('is-live');
+        controls.classList.remove('is-live');
         drawStandby(`Audio or camera did not start: ${error.message || 'permission blocked'}`);
     }
 }
@@ -639,6 +654,21 @@ function setKnobValue(knob, value) {
     knob.setAttribute('aria-valuenow', String(Math.round(normalized * 100)));
 }
 
+function toggleOperationNotes() {
+    const isCollapsed = operationNotes.classList.toggle('is-collapsed');
+    operationNotesTab.setAttribute('aria-expanded', String(!isCollapsed));
+}
+
+function openServiceNotes() {
+    serviceNotesModal.hidden = false;
+    closeServiceNotes.focus();
+}
+
+function closeServicePanel() {
+    serviceNotesModal.hidden = true;
+    serviceNotesButton.focus();
+}
+
 function distance(a, b) {
     const dx = a.x - b.x;
     const dy = a.y - b.y;
@@ -658,6 +688,19 @@ updateMeter(VOICE_SETTINGS.Left, handStates.Left);
 updateMeter(VOICE_SETTINGS.Right, handStates.Right);
 
 startButton.addEventListener('click', startTheremin);
+operationNotesTab.addEventListener('click', toggleOperationNotes);
+serviceNotesButton.addEventListener('click', openServiceNotes);
+closeServiceNotes.addEventListener('click', closeServicePanel);
+serviceNotesModal.addEventListener('click', (event) => {
+    if (event.target === serviceNotesModal) {
+        closeServicePanel();
+    }
+});
+window.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && !serviceNotesModal.hidden) {
+        closeServicePanel();
+    }
+});
 window.addEventListener('resize', () => {
     if (camera) {
         drawScope();

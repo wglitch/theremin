@@ -68,13 +68,25 @@ body {
   color: var(--amber);
 }
 
-h1 {
+.title-button {
   margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
   font-size: clamp(30px, 6vw, 62px);
   line-height: 0.92;
   font-weight: 800;
   letter-spacing: 0;
   text-transform: uppercase;
+  text-align: left;
+  cursor: pointer;
+}
+
+.title-button:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 4px;
 }
 
 .app-icon {
@@ -96,6 +108,103 @@ h1 {
   box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.65),
     inset 0 -8px 18px rgba(0, 0, 0, 0.14);
+}
+
+.operation-notes {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 14px;
+  transition: margin 220ms ease;
+}
+
+.note-tab {
+  justify-self: start;
+  padding: 5px 10px;
+  border: 1px solid #050505;
+  border-radius: 2px;
+  background: #10100f;
+  color: #f6f0de;
+  font-family: "Courier New", monospace;
+  font-size: 11px;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow:
+    0 2px 0 rgba(0, 0, 0, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.note-card {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(25, 23, 21, 0.34);
+  background:
+    linear-gradient(110deg, rgba(255, 255, 255, 0.18), transparent 42%),
+    rgba(255, 255, 255, 0.16);
+}
+
+.dymo-label {
+  padding: 7px 14px 6px;
+  border-radius: 2px;
+  background:
+    linear-gradient(180deg, #1a1a18, #050505);
+  color: #f4f0df;
+  font-family: "Courier New", monospace;
+  font-size: clamp(18px, 4vw, 32px);
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.2),
+    0 -1px 0 rgba(0, 0, 0, 0.8);
+  box-shadow:
+    0 3px 7px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.tape-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.tape-note {
+  display: inline-block;
+  padding: 7px 13px;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.26), transparent 20% 80%, rgba(255, 255, 255, 0.18)),
+    #d8c89f;
+  color: rgba(28, 23, 18, 0.82);
+  font-family: "Segoe Print", "Comic Sans MS", cursive;
+  font-size: clamp(14px, 2.7vw, 19px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.18);
+}
+
+.tape-one {
+  transform: rotate(-1.3deg);
+}
+
+.tape-two {
+  transform: rotate(1.1deg);
+}
+
+.operation-notes.is-collapsed {
+  margin-bottom: 8px;
+}
+
+.operation-notes.is-collapsed .note-card {
+  display: none;
+}
+
+.instrument-shell.is-armed .panel {
+  padding-top: clamp(10px, 1.4vw, 14px);
+}
+
+.instrument-shell.is-armed .scope-frame {
+  min-height: 270px;
 }
 
 .scope-frame {
@@ -296,7 +405,7 @@ h1 {
   display: block;
   width: min(100%, 320px);
   min-height: 54px;
-  margin: 16px auto 0;
+  margin: 0 auto;
   border: 2px solid var(--case-edge);
   border-radius: 3px;
   background:
@@ -309,6 +418,76 @@ h1 {
   box-shadow:
     0 5px 0 #34160a,
     inset 0 1px 0 rgba(255, 255, 255, 0.54);
+}
+
+.instrument-shell.is-armed .start-button {
+  display: none;
+}
+
+.service-modal[hidden] {
+  display: none;
+}
+
+.service-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(3, 3, 3, 0.68);
+}
+
+.service-card {
+  width: min(100%, 420px);
+  padding: 18px;
+  border: 8px solid #11110f;
+  border-radius: 4px;
+  background:
+    linear-gradient(180deg, #f3ead2, #d6c7a5);
+  color: var(--panel-ink);
+  font-family: "Courier New", monospace;
+  box-shadow:
+    0 28px 80px rgba(0, 0, 0, 0.62),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.55);
+}
+
+.service-card h2 {
+  margin: 0 0 14px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--panel-ink);
+  font-size: 18px;
+  letter-spacing: 0;
+}
+
+.service-card p {
+  margin: 0 0 12px;
+  line-height: 1.35;
+}
+
+.service-title {
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.warning {
+  display: inline-block;
+  padding: 5px 8px;
+  border: 1px solid var(--panel-ink);
+  transform: rotate(-1deg);
+  text-transform: uppercase;
+}
+
+.service-card button {
+  width: 100%;
+  min-height: 42px;
+  border: 2px solid var(--case-edge);
+  background: #11110f;
+  color: var(--panel);
+  font-family: "Courier New", monospace;
+  font-weight: 800;
+  text-transform: uppercase;
+  cursor: pointer;
 }
 
 .start-button:active {
@@ -427,6 +606,18 @@ h1 {
     min-height: 190px;
     aspect-ratio: 1 / 1;
     border-width: 8px;
+  }
+
+  .instrument-shell.is-armed .scope-frame {
+    min-height: 220px;
+  }
+
+  .note-card {
+    padding: 12px 8px;
+  }
+
+  .tape-row {
+    gap: 7px;
   }
 
   .channel-bank {

@@ -19,12 +19,24 @@
     <header class="brand-strip">
       <div>
         <p class="eyebrow">Stereo optical instrument</p>
-        <h1>Visual Theremin</h1>
+        <button class="title-button" id="serviceNotesButton" type="button" aria-haspopup="dialog">Visual Theremin</button>
       </div>
       <img class="app-icon" src="thereminicon2.png" alt="">
     </header>
 
     <section class="panel">
+      <div class="operation-notes" id="operationNotes">
+        <button class="note-tab" id="operationNotesTab" type="button" aria-expanded="true">OPERATING NOTES</button>
+        <div class="note-card" id="operationNotesCard">
+          <div class="dymo-label">PLACE PHONE FLAT</div>
+          <div class="tape-row">
+            <span class="tape-note tape-one">open palm = volume</span>
+            <span class="tape-note tape-two">hand height = pitch</span>
+          </div>
+          <button id="startButton" class="start-button">Arm sensor</button>
+        </div>
+      </div>
+
       <div class="scope-frame" id="canvasContainer">
         <video id="input_video" playsinline muted></video>
         <canvas id="output_canvas"></canvas>
@@ -88,8 +100,19 @@
         </div>
       </div>
 
-      <button id="startButton" class="start-button">Start instrument</button>
     </section>
+
+    <div class="service-modal" id="serviceNotesModal" role="dialog" aria-modal="true" aria-labelledby="serviceNotesTitle" hidden>
+      <div class="service-card">
+        <h2 id="serviceNotesTitle">SERVICE NOTES</h2>
+        <p class="service-title">VISUAL THEREMIN</p>
+        <p>Stereo optical instrument for one or two hands.</p>
+        <p>Wglitch Dream Machine<br>Prototype 2026</p>
+        <p>Place phone flat. Open palm controls level. Hand height controls pitch.</p>
+        <p class="warning">Not medical equipment.</p>
+        <button id="closeServiceNotes" type="button">Close panel</button>
+      </div>
+    </div>
   </main>
 
   <script src="theremin.js"></script>
