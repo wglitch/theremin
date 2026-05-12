@@ -91,6 +91,8 @@ function createHandState() {
         volume: 0,
         x: 0.5,
         y: 0.5,
+        fieldX: 0.5,
+        fieldY: 0.5,
         active: false,
         age: 0,
     };
@@ -299,6 +301,8 @@ function updateHandState(side, landmarks) {
     state.volume = state.volumeControl;
     state.x = lerp(state.x, center.x, 0.24);
     state.y = lerp(state.y, center.y, 0.24);
+    state.fieldX = lerp(state.fieldX, mirrorHandX(center.x), 0.2);
+    state.fieldY = lerp(state.fieldY, center.y, 0.2);
     state.active = true;
     state.age = 0;
 }
@@ -411,8 +415,9 @@ function drawVoice(side) {
     const displayY = point.y;
     const level = clamp(state.volumeControl, 0, 1);
     const interference = getInterference();
-    const glow = (state.active ? 0.62 : 0.32) + level * 0.42;
-    const saturation = state.active ? 0.58 + level * 0.42 : 0.4;
+    const visibleSignal = state.active ? 1 : 0.42;
+    const glow = (0.5 + level * 0.48) * visibleSignal;
+    const saturation = (0.62 + level * 0.38) * visibleSignal;
     const fuzz = interference * level;
     const size = Math.max(14, width * (0.026 + level * 0.018 + interference * 0.014));
 
@@ -427,6 +432,15 @@ function drawVoice(side) {
     canvasCtx.beginPath();
     canvasCtx.arc(displayX, displayY, size, 0, Math.PI * 2);
     canvasCtx.stroke();
+
+    canvasCtx.globalAlpha = glow * 0.48;
+    canvasCtx.lineWidth = Math.max(1, width * 0.0016);
+    canvasCtx.setLineDash([Math.max(3, width * 0.006), Math.max(4, width * 0.008)]);
+    canvasCtx.beginPath();
+    canvasCtx.arc(displayX, displayY, size * (1.75 + Math.sin(performance.now() * 0.003 + side.length) * 0.08), 0, Math.PI * 2);
+    canvasCtx.stroke();
+    canvasCtx.setLineDash([]);
+    canvasCtx.globalAlpha = glow;
 
     canvasCtx.beginPath();
     canvasCtx.moveTo(displayX - size * 1.38, displayY);
@@ -455,22 +469,17 @@ function drawVoice(side) {
 function getFieldPoint(side) {
     const state = handStates[side];
     const { width, height } = canvasElement;
-    const diagonal = clamp((state.pitchControl * 0.58) + ((1 - state.y) * 0.24) + (state.volumeControl * 0.18), 0, 1);
-    const drift = Math.sin(performance.now() * 0.0011 + state.pitchControl * 5.5) * 0.028;
-    const wobble = Math.sin(performance.now() * 0.0024 + state.pitchControl * 8) * 0.018 * (0.35 + state.volumeControl);
-    const handPull = (state.x - 0.5) * 0.12;
-
-    if (side === 'Left') {
-        return {
-            x: width * clamp(0.1 + diagonal * 0.56 + handPull + wobble, 0.08, 0.72),
-            y: height * clamp(0.84 - diagonal * 0.64 + drift + wobble * 0.45, 0.14, 0.88),
-        };
-    }
-
+    const activity = state.active ? 1 : 0;
+    const drift = Math.sin(performance.now() * 0.0012 + (side === 'Left' ? 0 : 1.8)) * 0.012 * (0.25 + state.volumeControl);
+    const jitter = Math.sin(performance.now() * 0.004 + state.fieldY * 7) * 0.01 * state.volumeControl;
     return {
-        x: width * clamp(0.9 - diagonal * 0.56 + handPull - wobble, 0.28, 0.92),
-        y: height * clamp(0.84 - diagonal * 0.64 - drift - wobble * 0.45, 0.14, 0.88),
+        x: width * clamp(0.08 + state.fieldX * 0.84 + drift * activity, 0.08, 0.92),
+        y: height * clamp(0.11 + state.fieldY * 0.78 + jitter * activity, 0.11, 0.89),
     };
+}
+
+function mirrorHandX(x) {
+    return 1 - x;
 }
 
 function drawFieldBridge() {
@@ -517,10 +526,10 @@ function getInterference() {
     const right = handStates.Right;
     if (!left.active || !right.active) return 0;
 
-    const dx = left.x - right.x;
-    const dy = left.y - right.y;
+    const dx = left.fieldX - right.fieldX;
+    const dy = left.fieldY - right.fieldY;
     const distanceBetweenHands = Math.sqrt(dx * dx + dy * dy);
-    return clamp((0.48 - distanceBetweenHands) / 0.28, 0, 1) * Math.min(left.volumeControl, right.volumeControl);
+    return clamp((0.34 - distanceBetweenHands) / 0.2, 0, 1) * Math.min(left.volumeControl, right.volumeControl);
 }
 
 function updateMeter(settings, state) {
