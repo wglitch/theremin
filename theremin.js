@@ -28,7 +28,7 @@ videoElement.style.transform = 'scaleX(-1)';
 const VOICE_SETTINGS = {
     Left: {
         name: 'Oo',
-        color: '#d8b35a',
+        color: '#f2d15a',
         minHz: 65,
         maxHz: 660,
         pan: -0.36,
@@ -409,20 +409,20 @@ function drawVoice(side) {
     const point = getFieldPoint(side);
     const displayX = point.x;
     const displayY = point.y;
-    const level = clamp(state.volumeControl, 0.03, 1);
+    const level = clamp(state.volumeControl, 0, 1);
     const interference = getInterference();
-    const glow = (state.active ? 0.34 : 0.12) + level * 0.68;
-    const saturation = state.active ? 0.24 + level * 0.76 : 0.18;
+    const glow = (state.active ? 0.62 : 0.32) + level * 0.42;
+    const saturation = state.active ? 0.58 + level * 0.42 : 0.4;
     const fuzz = interference * level;
-    const size = Math.max(12, width * (0.022 + level * 0.018 + interference * 0.012));
+    const size = Math.max(14, width * (0.026 + level * 0.018 + interference * 0.014));
 
     canvasCtx.save();
     canvasCtx.globalAlpha = glow;
     canvasCtx.strokeStyle = withAlpha(settings.color, saturation);
     canvasCtx.fillStyle = withAlpha(settings.color, saturation);
-    canvasCtx.lineWidth = Math.max(2, width * 0.0035);
+    canvasCtx.lineWidth = Math.max(2.4, width * 0.004);
     canvasCtx.shadowColor = settings.color;
-    canvasCtx.shadowBlur = width * (0.01 + level * 0.018);
+    canvasCtx.shadowBlur = width * (0.018 + level * 0.022);
 
     canvasCtx.beginPath();
     canvasCtx.arc(displayX, displayY, size, 0, Math.PI * 2);
@@ -455,19 +455,21 @@ function drawVoice(side) {
 function getFieldPoint(side) {
     const state = handStates[side];
     const { width, height } = canvasElement;
-    const diagonal = clamp((state.pitchControl * 0.62) + ((1 - state.y) * 0.26) + (state.volumeControl * 0.12), 0, 1);
-    const wobble = Math.sin(performance.now() * 0.002 + state.pitchControl * 8) * 0.012 * state.volumeControl;
+    const diagonal = clamp((state.pitchControl * 0.58) + ((1 - state.y) * 0.24) + (state.volumeControl * 0.18), 0, 1);
+    const drift = Math.sin(performance.now() * 0.0011 + state.pitchControl * 5.5) * 0.028;
+    const wobble = Math.sin(performance.now() * 0.0024 + state.pitchControl * 8) * 0.018 * (0.35 + state.volumeControl);
+    const handPull = (state.x - 0.5) * 0.12;
 
     if (side === 'Left') {
         return {
-            x: width * (0.18 + diagonal * 0.34 + wobble),
-            y: height * (0.76 - diagonal * 0.46 + wobble * 0.55),
+            x: width * clamp(0.1 + diagonal * 0.56 + handPull + wobble, 0.08, 0.72),
+            y: height * clamp(0.84 - diagonal * 0.64 + drift + wobble * 0.45, 0.14, 0.88),
         };
     }
 
     return {
-        x: width * (0.82 - diagonal * 0.34 - wobble),
-        y: height * (0.76 - diagonal * 0.46 - wobble * 0.55),
+        x: width * clamp(0.9 - diagonal * 0.56 + handPull - wobble, 0.28, 0.92),
+        y: height * clamp(0.84 - diagonal * 0.64 - drift - wobble * 0.45, 0.14, 0.88),
     };
 }
 
@@ -481,18 +483,22 @@ function drawFieldBridge() {
     const time = performance.now() * 0.014;
 
     canvasCtx.save();
-    canvasCtx.lineWidth = Math.max(1, width * 0.0016);
-    canvasCtx.strokeStyle = `rgba(240, 106, 47, ${0.08 + interference * 0.22})`;
+    canvasCtx.lineWidth = Math.max(1, width * 0.0014);
     canvasCtx.shadowColor = '#f06a2f';
-    canvasCtx.shadowBlur = width * 0.018 * interference;
+    canvasCtx.shadowBlur = width * 0.026 * interference;
 
-    for (let strand = 0; strand < 4; strand += 1) {
+    for (let strand = 0; strand < 9; strand += 1) {
         canvasCtx.beginPath();
-        for (let i = 0; i <= 26; i += 1) {
-            const t = i / 26;
-            const noise = Math.sin(t * Math.PI * 8 + time + strand) * width * 0.009 * interference;
+        canvasCtx.strokeStyle = strand % 2 === 0
+            ? `rgba(242, 209, 90, ${0.06 + interference * 0.22})`
+            : `rgba(240, 106, 47, ${0.08 + interference * 0.26})`;
+
+        for (let i = 0; i <= 14; i += 1) {
+            const t = i / 14;
+            const noise = Math.sin(t * Math.PI * (7 + strand) + time + strand) * width * (0.008 + strand * 0.0008) * interference;
+            const spark = Math.sin((t + strand) * 31.7 + time) > 0.34 ? 1 : -1;
             const x = lerp(leftPoint.x, rightPoint.x, t);
-            const y = lerp(leftPoint.y, rightPoint.y, t) + noise + (strand - 1.5) * width * 0.003 * interference;
+            const y = lerp(leftPoint.y, rightPoint.y, t) + noise + spark * width * 0.006 * interference + (strand - 4) * width * 0.002 * interference;
 
             if (i === 0) {
                 canvasCtx.moveTo(x, y);
@@ -520,11 +526,14 @@ function getInterference() {
 function updateMeter(settings, state) {
     const range = settings.maxHz - settings.minHz;
     const normalized = clamp(((state.frequency || settings.minHz) - settings.minHz) / range, 0, 1);
-    const angle = -48 + normalized * 96;
-    const glow = 0.24 + clamp(state.volume, 0, 1) * 0.76;
+    const displayPosition = state.active ? normalized : 0.5;
+    const angle = -48 + displayPosition * 96;
+    const glow = state.active ? 0.18 + clamp(state.volume, 0, 1) * 0.82 : 0.14;
+    const outerField = state.active && state.pitchControl > 0.94;
 
     settings.meter.style.setProperty('--needle-angle', `${angle}deg`);
     settings.meter.style.setProperty('--meter-glow', glow.toFixed(3));
+    settings.meter.classList.toggle('is-hot', outerField);
 }
 
 function drawWaveform() {

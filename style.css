@@ -264,6 +264,7 @@ body {
 .analog-meter {
   --needle-angle: -48deg;
   --meter-glow: 0.22;
+  position: relative;
   min-width: 0;
   padding: 7px;
   border: 1px solid var(--panel-ink);
@@ -271,6 +272,34 @@ body {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.16),
     inset 0 -6px 14px rgba(0, 0, 0, 0.36);
+}
+
+.analog-meter::after {
+  content: "";
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #2c0805;
+  border: 1px solid rgba(255, 140, 110, 0.16);
+  opacity: 0.32;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.8);
+  transition:
+    opacity 120ms ease,
+    background 120ms ease,
+    box-shadow 120ms ease;
+  z-index: 3;
+}
+
+.analog-meter.is-hot::after {
+  background: #ff2d18;
+  opacity: 1;
+  box-shadow:
+    0 0 8px rgba(255, 45, 24, 0.95),
+    0 0 18px rgba(255, 45, 24, 0.55),
+    inset 0 1px 2px rgba(255, 255, 255, 0.5);
 }
 
 .meter-face {
@@ -463,17 +492,27 @@ body {
 
 .warning {
   display: inline-block;
-  padding: 5px 8px;
+  padding: 5px 8px 4px;
   border: 1px solid var(--panel-ink);
-  transform: rotate(-1deg);
+  background: rgba(244, 234, 210, 0.38);
+  transform: rotate(-0.8deg);
   text-transform: uppercase;
   font-weight: 800;
+  font-family: "Courier New", monospace;
+  font-size: 12px;
+  letter-spacing: 0;
 }
 
 .maker-mark {
-  font-size: 13px;
+  padding: 5px 9px 4px;
+  border: 1px solid rgba(25, 23, 21, 0.34);
+  background: rgba(244, 234, 210, 0.26);
+  font-family: "Courier New", monospace;
+  font-size: 12px;
+  line-height: 1.25;
+  letter-spacing: 0;
   text-transform: uppercase;
-  color: rgba(25, 23, 21, 0.76);
+  color: rgba(25, 23, 21, 0.82);
 }
 
 .service-card button {
