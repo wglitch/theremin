@@ -112,32 +112,18 @@ body {
 
 .operation-notes {
   display: grid;
-  gap: 10px;
   margin-bottom: 14px;
-  transition: margin 220ms ease;
-}
-
-.note-tab {
-  justify-self: start;
-  padding: 5px 10px;
-  border: 1px solid #050505;
-  border-radius: 2px;
-  background: #10100f;
-  color: #f6f0de;
-  font-family: "Courier New", monospace;
-  font-size: 11px;
-  letter-spacing: 0;
-  text-transform: uppercase;
-  cursor: pointer;
-  box-shadow:
-    0 2px 0 rgba(0, 0, 0, 0.42),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transform-origin: top left;
+  transition:
+    margin 220ms ease,
+    opacity 520ms ease,
+    transform 620ms cubic-bezier(0.18, 0.86, 0.34, 1);
 }
 
 .note-card {
   display: grid;
   justify-items: center;
-  gap: 12px;
+  gap: 9px;
   padding: 14px;
   border: 1px solid rgba(25, 23, 21, 0.34);
   background:
@@ -164,39 +150,39 @@ body {
     inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
-.tape-row {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 10px;
-}
-
-.tape-note {
-  display: inline-block;
-  padding: 7px 13px;
-  background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.26), transparent 20% 80%, rgba(255, 255, 255, 0.18)),
-    #d8c89f;
-  color: rgba(28, 23, 18, 0.82);
-  font-family: "Segoe Print", "Comic Sans MS", cursive;
-  font-size: clamp(14px, 2.7vw, 19px);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.18);
-}
-
-.tape-one {
-  transform: rotate(-1.3deg);
-}
-
-.tape-two {
-  transform: rotate(1.1deg);
+.dymo-secondary {
+  font-size: clamp(13px, 2.5vw, 19px);
+  font-weight: 700;
+  background: linear-gradient(180deg, #252522, #0d0d0b);
 }
 
 .operation-notes.is-collapsed {
-  margin-bottom: 8px;
+  height: 0;
+  margin-bottom: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
 }
 
-.operation-notes.is-collapsed .note-card {
-  display: none;
+.operation-notes.is-docking {
+  opacity: 0;
+  transform: translate(-28px, -72px) scale(0.18);
+  pointer-events: none;
+}
+
+.title-button.is-docking-target {
+  animation: titleDockGlow 680ms ease;
+}
+
+@keyframes titleDockGlow {
+  0%, 100% {
+    text-shadow: none;
+  }
+  45% {
+    text-shadow:
+      0 0 10px rgba(216, 179, 90, 0.8),
+      0 0 24px rgba(240, 106, 47, 0.45);
+  }
 }
 
 .instrument-shell.is-armed .panel {
@@ -439,6 +425,9 @@ body {
 }
 
 .service-card {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
   width: min(100%, 420px);
   padding: 18px;
   border: 8px solid #11110f;
@@ -454,6 +443,7 @@ body {
 
 .service-card h2 {
   margin: 0 0 14px;
+  justify-self: stretch;
   padding-bottom: 8px;
   border-bottom: 2px solid var(--panel-ink);
   font-size: 18px;
@@ -463,6 +453,7 @@ body {
 .service-card p {
   margin: 0 0 12px;
   line-height: 1.35;
+  text-align: center;
 }
 
 .service-title {
@@ -476,6 +467,13 @@ body {
   border: 1px solid var(--panel-ink);
   transform: rotate(-1deg);
   text-transform: uppercase;
+  font-weight: 800;
+}
+
+.maker-mark {
+  font-size: 13px;
+  text-transform: uppercase;
+  color: rgba(25, 23, 21, 0.76);
 }
 
 .service-card button {
@@ -616,8 +614,9 @@ body {
     padding: 12px 8px;
   }
 
-  .tape-row {
-    gap: 7px;
+  .dymo-label {
+    max-width: 100%;
+    text-align: center;
   }
 
   .channel-bank {
